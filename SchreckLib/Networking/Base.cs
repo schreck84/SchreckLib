@@ -1,6 +1,7 @@
 ﻿[assembly: System.CLSCompliant(true)]
 namespace SchreckLib.Networking
 {
+    #region References
     using Utils;
     using Events;
     using Exceptions;
@@ -11,33 +12,45 @@ namespace SchreckLib.Networking
     using System.Threading;
     using System.Linq;
     using System.Collections.Generic;
+    using System.Runtime.Serialization;
+    #endregion
     public abstract class Base : IDisposable
     {
         #region "Events"
         #region "Deprecated"
-
+        [Obsolete("Use SendingData")]
+        public event EventHandler<SendReceiveEventArgs> BeforeSend;
+        [Obsolete("Use SentData")]
+        public event EventHandler<SendReceiveEventArgs> AfterSend;
+        [Obsolete("Use ReceivingData")]
+        public event EventHandler<SendReceiveEventArgs> BeforeRead;
+        [Obsolete("Use ReceivedData")]
+        public event EventHandler<SendReceiveEventArgs> AfterRead;
+        [Obsolete("Use ReceivedData")]
+        public event EventHandler<SendReceiveEventArgs> DataReceived;
         #endregion
+
         #region "Send Events"
         /// <summary>
         /// Fires before data is sent to a Client/Server
         /// </summary>
-        public event EventHandler<SendReceiveEventArgs> BeforeSend;
+        public event EventHandler<SendReceiveEventArgs> SendingData;
         /// <summary>
         /// Fires after data is sent to a Client/Server
         /// </summary>
-        public event EventHandler<SendReceiveEventArgs> AfterSend;
+        public event EventHandler<SendReceiveEventArgs> SentData;
         #endregion
 
         #region "Read Events"
         /// <summary>
         /// Fires before reading infomation from the socket
         /// </summary>
-        public event EventHandler<SendReceiveEventArgs> BeforeRead;
+        public event EventHandler<SendReceiveEventArgs> ReceivingData;
         /// <summary>
         /// Fires after reading information from the socket
         /// </summary>
-        public event EventHandler<SendReceiveEventArgs> AfterRead;
-        public event EventHandler<SendReceiveEventArgs> DataReceived;
+        
+        public event EventHandler<SendReceiveEventArgs> ReceivedData;
         #endregion
 
         #region "Error Handling"
@@ -113,6 +126,7 @@ namespace SchreckLib.Networking
             }
             catch { }
             Dispose(false);
+            return;
         }
         #endregion
 
@@ -158,17 +172,17 @@ namespace SchreckLib.Networking
             {
                 //lastDataSent = data;
 
-                OnBeforeSend(socket, data);
+                OnSendingData(socket, data);
 
                 socket.Send(data);
 
-                OnAfterSend(socket, data);
+                OnDataSent(socket, data);
 
 
             }
             catch (Exception e)
             {
-                onException(e);
+                OnException(e);
             }
         }
 
@@ -181,7 +195,7 @@ namespace SchreckLib.Networking
             try
             {
 
-                OnBeforeSend(socket, data);
+                OnSendingData(socket, data);
                 if (socket.Connected)
                 {
                     socket.Send(data);
@@ -191,13 +205,13 @@ namespace SchreckLib.Networking
                     OnDisconnect(socket);
                 }
 
-                OnAfterSend(socket, data);
+                OnDataSent(socket, data);
 
 
             }
             catch (Exception e)
             {
-                onException(e);
+                OnException(e);
             }
         }
         /// <summary>
@@ -265,13 +279,14 @@ namespace SchreckLib.Networking
                         bufferLength = 0;
                         break;
                     default:
-                        onException(e);
+                        OnException(e);
                         break;
                 }
             }
             catch (Exception e)
             {
-                onException(e);
+                OnException(e);
+                throw new Exception("Error Recieving Data", e);
             }
         }
         #endregion
@@ -283,21 +298,33 @@ namespace SchreckLib.Networking
             if (h != null)
                 h(this, new ErrorEventArgs(error));
         }
-        protected virtual void onException(Exception exception)
+        protected virtual void OnException(Exception exception)
         {
             EventHandler<ExceptionEventArgs> h = ExceptionRaised;
             if (h != null)
                 h(this, new ExceptionEventArgs(exception));
         }
-        protected virtual void OnBeforeSend(Socket socket, byte[] data)
+        protected virtual void OnSendingData(Socket socket, byte[] data)
         {
-            EventHandler<SendReceiveEventArgs> h = BeforeSend;
+            SendReceiveEventArgs e = new SendReceiveEventArgs(socket, this, data);
+            EventHandler<SendReceiveEventArgs> h = SendingData;
+            if (h != null)
+                h(this, e);
+
+            //TODO - Remove This
+            h = BeforeSend;
+            if (h != null)
+                h(this, e);
+        }
+        protected virtual void OnDataSent(Socket socket, byte[] data)
+        {
+            SendReceiveEventArgs e = new SendReceiveEventArgs(socket, this, data);
+            EventHandler<SendReceiveEventArgs> h = SentData;
             if (h != null)
                 h(this, new SendReceiveEventArgs(socket, this, data));
-        }
-        protected virtual void OnAfterSend(Socket socket, byte[] data)
-        {
-            EventHandler<SendReceiveEventArgs> h = AfterSend;
+
+            // TODO  - Remove this
+            h = AfterSend;
             if (h != null)
                 h(this, new SendReceiveEventArgs(socket, this, data));
         }
@@ -315,7 +342,7 @@ namespace SchreckLib.Networking
         }
         protected virtual void OnDataReceived(Socket socket, byte[] data)
         {
-            EventHandler<SendReceiveEventArgs> h = DataReceived;
+            EventHandler<SendReceiveEventArgs> h = ReceivedData;
             if (h != null)
                 h(this, new SendReceiveEventArgs(socket, this, data));
         }
@@ -333,6 +360,14 @@ namespace SchreckLib.Networking
         {
             if (disposing)
             {
+                if (socket.Connected)
+                {
+                    socket.Disconnect(false);
+                    OnDisconnect(socket);
+                }
+
+                socket.Close();
+                socket = null;
                 // TODO: dispose managed state (managed objects).
             }
 
@@ -350,7 +385,7 @@ namespace SchreckLib.Networking
                 // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
                 Dispose(true);
                 // TODO: uncomment the following line if the finalizer is overridden above.
-                // GC.SuppressFinalize(this);
+                GC.SuppressFinalize(this);
             }
 
         }

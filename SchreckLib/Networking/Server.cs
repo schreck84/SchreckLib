@@ -173,7 +173,7 @@
                         }
                         catch (Exception e)
                         {
-                            onException(e);
+                            OnException(e);
                         }
                     }
                 }
@@ -222,7 +222,7 @@
             }
             catch (Exception e)
             {
-                onException(e);
+                OnException(e);
             }
         }
         public void Listen(int backlog = 0)
@@ -243,7 +243,7 @@
             }
             catch (Exception e)
             {
-                onException(e);
+                OnException(e);
             }
         }
         public void Broadcast(string data)
@@ -270,7 +270,7 @@
                         }
                         catch (Exception e)
                         {
-                            onException(e);
+                            OnException(e);
                         }
                     }
                     OnAfterBroadcast(data, sent);
@@ -317,7 +317,7 @@
             }
             catch (Exception e)
             {
-                onException(e);
+                OnException(e);
             }
         }
         public new void Dispose(bool disposing)

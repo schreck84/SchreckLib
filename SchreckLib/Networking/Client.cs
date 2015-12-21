@@ -68,7 +68,7 @@
             }
             catch (Exception e)
             {
-                onException(e);
+                OnException(e);
             }
         }
         protected void ConnectCallback(IAsyncResult result)

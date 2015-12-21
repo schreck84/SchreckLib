@@ -23,7 +23,7 @@ namespace ConsoleApplication1
 #pragma warning disable CS0618 // Type or member is obsolete
             svr.ClientConnected += ClientConnect;
 #pragma warning restore CS0618 // Type or member is obsolete
-            svr.DataReceived += Svr_DataReceived;
+            svr.ReceivedData += Svr_DataReceived;
             svr.BeforeBroadcast += Svr_BeforeBroadcast;
             svr.AfterBroadcast += Svr_AfterBroadcast;
             svr.ClientDisconnected += Svr_Disconnected;
@@ -34,7 +34,7 @@ namespace ConsoleApplication1
 #pragma warning disable CS0618 // Type or member is obsolete
             cli.Connected += ClientAfterConnect;
 #pragma warning restore CS0618 // Type or member is obsolete
-            cli.DataReceived += Cli_DataReceived;
+            cli.ReceivedData += Cli_DataReceived;
             cli.Disconnected += Cli_Disconnected;
             cli.ExceptionRaised += Cli_ExceptionRaised;
             cli.ErrorRaised += Cli_ErrorRaised;
@@ -167,7 +167,7 @@ namespace ConsoleApplication1
 #pragma warning disable CS0618 // Type or member is obsolete
                 cli2.AfterConnect += Cli2_AfterConnect;
 #pragma warning restore CS0618 // Type or member is obsolete
-                cli2.DataReceived += Cli2_DataReceived;
+                cli2.ReceivedData += Cli2_DataReceived;
                 cli2.Disconnected += Cli2_Disconnected;
                 cli2.ErrorRaised += Cli2_ErrorRaised;
                 cli2.ExceptionRaised += Cli2_ExceptionRaised;
